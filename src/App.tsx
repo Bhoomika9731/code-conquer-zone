@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import Index from "./pages/Index";
+import Practice from "./pages/Practice";
+import Interview from "./pages/Interview";
+import Battle from "./pages/Battle";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +25,10 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/practice" element={<Practice />} />
+              <Route path="/interview" element={<Interview />} />
+              <Route path="/battle" element={<Battle />} />
+              <Route path="/community" element={<Community />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

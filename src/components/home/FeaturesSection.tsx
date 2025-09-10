@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Star
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const features = [
   {
@@ -110,9 +111,11 @@ export const FeaturesSection = () => {
         </div>
 
         <div className="text-center mt-16">
-          <Button size="lg" className="px-8 py-3 shadow-glow">
-            Explore All Features
-            <ArrowRight className="w-5 h-5 ml-2" />
+          <Button asChild variant="hero" size="lg">
+            <Link to="/practice">
+              Explore All Features
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
           </Button>
         </div>
       </div>

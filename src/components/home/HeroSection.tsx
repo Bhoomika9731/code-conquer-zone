@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import heroLightBg from '@/assets/hero-bg-light.jpg';
 import heroDarkBg from '@/assets/hero-bg-dark.jpg';
 
@@ -47,12 +48,16 @@ export const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button variant="hero" size="lg" className="px-8 py-3 text-lg font-semibold">
-              <Play className="w-5 h-5 mr-2" />
-              Start Learning Free
+            <Button asChild variant="hero" size="lg" className="px-8 py-3 text-lg font-semibold">
+              <Link to="/practice">
+                <Play className="w-5 h-5 mr-2" />
+                Start Learning Free
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-3 text-lg">
-              Watch Demo
+            <Button asChild variant="outline" size="lg" className="px-8 py-3 text-lg">
+              <Link to="/interview">
+                Watch Demo
+              </Link>
             </Button>
           </div>
 

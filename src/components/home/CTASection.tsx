@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Sparkles, Gift } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const CTASection = () => {
   return (
@@ -26,13 +27,17 @@ export const CTASection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button variant="hero" size="lg" className="px-8 py-4 text-lg font-semibold">
-              <Sparkles className="w-5 h-5 mr-2" />
-              Start Free Trial
+            <Button asChild variant="hero" size="lg" className="px-8 py-4 text-lg font-semibold">
+              <Link to="/practice">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Free Trial
+              </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-4 text-lg">
-              Schedule Demo
-              <ArrowRight className="w-5 h-5 ml-2" />
+            <Button asChild variant="outline" size="lg" className="px-8 py-4 text-lg">
+              <Link to="/interview">
+                Schedule Demo
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
             </Button>
           </div>
           
