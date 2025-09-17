@@ -39,26 +39,6 @@ const interviewTypes = [
     color: 'bg-green-500',
     questions: 20,
   },
-  {
-    id: 3,
-    title: 'System Design Interview',
-    description: 'Architecture design and scalability discussions',
-    duration: '60-90 minutes',
-    difficulty: 'Advanced',
-    icon: Target,
-    color: 'bg-purple-500',
-    questions: 15,
-  },
-  {
-    id: 4,
-    title: 'Product Management',
-    description: 'Strategy, roadmaps, and user experience focus',
-    duration: '45-60 minutes',
-    difficulty: 'Intermediate',
-    icon: Briefcase,
-    color: 'bg-orange-500',
-    questions: 18,
-  },
 ];
 
 const experienceLevels = [

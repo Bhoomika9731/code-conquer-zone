@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Menu, X, Zap, Trophy, Users, BookOpen, Brain } from 'lucide-react';
 
 export const Header = () => {
@@ -44,7 +43,6 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <ThemeToggle />
             <div className="hidden md:flex items-center space-x-2">
               <Button variant="ghost">Sign In</Button>
               <Button>Get Started</Button>

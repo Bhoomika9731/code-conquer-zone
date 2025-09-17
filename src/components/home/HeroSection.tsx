@@ -54,11 +54,6 @@ export const HeroSection = () => {
                 Start Learning Free
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="px-8 py-3 text-lg">
-              <Link to="/interview">
-                Watch Demo
-              </Link>
-            </Button>
           </div>
 
           {/* Stats */}
