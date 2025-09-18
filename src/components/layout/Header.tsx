@@ -10,7 +10,6 @@ export const Header = () => {
     { label: 'Practice', href: '/practice', icon: BookOpen },
     { label: 'Mock Interview', href: '/interview', icon: Brain },
     { label: 'Quiz Battle', href: '/battle', icon: Trophy },
-    { label: 'Community', href: '/community', icon: Users },
   ];
 
   return (

@@ -41,25 +41,8 @@ const battleModes = [
     duration: '10 minutes',
     questions: 30,
   },
-  {
-    id: 3,
-    title: 'Tournament',
-    description: 'Compete in ranked tournament matches',
-    icon: Crown,
-    color: 'bg-purple-500',
-    maxPlayers: 16,
-    duration: '15 minutes',
-    questions: 40,
-  },
 ];
 
-const leaderboard = [
-  { rank: 1, name: 'CodeMaster', score: 2480, wins: 48, avatar: '🥇' },
-  { rank: 2, name: 'AlgoNinja', score: 2350, wins: 42, avatar: '🥈' },
-  { rank: 3, name: 'DevWizard', score: 2280, wins: 39, avatar: '🥉' },
-  { rank: 4, name: 'TechGuru', score: 2150, wins: 35, avatar: '👨‍💻' },
-  { rank: 5, name: 'QuizMaster', score: 2020, wins: 33, avatar: '🧠' },
-];
 
 const Battle = () => {
   const [gameMode, setGameMode] = useState<'menu' | 'lobby' | 'game'>('menu');
@@ -75,9 +58,6 @@ const Battle = () => {
     } else if (modeId === 2) {
       // Private room - show room options  
       setIsCreatingRoom(true);
-    } else if (modeId === 3) {
-      // Tournament - join tournament queue
-      setGameMode('lobby');
     }
   };
 
@@ -117,7 +97,7 @@ const Battle = () => {
             </div>
 
             {/* Player Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <Card className="p-6 text-center bg-gradient-card">
                 <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
                 <div className="text-2xl font-bold">1,847</div>
@@ -133,15 +113,10 @@ const Battle = () => {
                 <div className="text-2xl font-bold">87%</div>
                 <div className="text-sm text-muted-foreground">Win Rate</div>
               </Card>
-              <Card className="p-6 text-center bg-gradient-card">
-                <Crown className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold">#47</div>
-                <div className="text-sm text-muted-foreground">Global Rank</div>
-              </Card>
             </div>
 
             {/* Battle Modes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {battleModes.map((mode) => (
                 <Card 
                   key={mode.id} 
@@ -220,31 +195,6 @@ const Battle = () => {
                 </div>
               </Card>
             )}
-
-            {/* Leaderboard */}
-            <Card className="p-8 bg-gradient-card">
-              <h3 className="text-xl font-semibold mb-6 flex items-center">
-                <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-                Global Leaderboard
-              </h3>
-              <div className="space-y-4">
-                {leaderboard.map((player) => (
-                  <div key={player.rank} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl">{player.avatar}</div>
-                      <div>
-                        <div className="font-medium">#{player.rank} {player.name}</div>
-                        <div className="text-sm text-muted-foreground">{player.wins} victories</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">{player.score}</div>
-                      <div className="text-sm text-muted-foreground">points</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
           </>
         )}
 
