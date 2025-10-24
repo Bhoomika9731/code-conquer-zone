@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
 import { 
   Trophy, 
   Users, 
@@ -12,15 +11,11 @@ import {
   Target,
   Swords,
   Play,
-  UserPlus,
-  Hash,
-  Medal,
-  Timer,
-  Gamepad2,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
 import { battleQuestions, Question } from '@/data/questions';
+import { BattleReport } from '@/components/reports/BattleReport';
 
 const battleModes = [
   {
@@ -47,12 +42,13 @@ const battleModes = [
 
 
 const Battle = () => {
-  const [gameMode, setGameMode] = useState<'menu' | 'game'>('menu');
+  const [gameMode, setGameMode] = useState<'menu' | 'game' | 'report'>('menu');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState<{ [key: number]: boolean }>({});
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(600);
   const [isGameActive, setIsGameActive] = useState(false);
+  const [startTime, setStartTime] = useState<number>(0);
 
   useEffect(() => {
     if (isGameActive && timeLeft > 0) {
@@ -72,6 +68,7 @@ const Battle = () => {
     setSelectedAnswers({});
     setShowResults({});
     setTimeLeft(600);
+    setStartTime(Date.now());
   };
 
   const handleAnswer = (answerIndex: number) => {
@@ -90,12 +87,8 @@ const Battle = () => {
   };
 
   const handleFinishGame = () => {
-    const correctCount = Object.keys(showResults).filter(
-      (qId) => selectedAnswers[parseInt(qId)] === battleQuestions.find(q => q.id === parseInt(qId))?.correctAnswer
-    ).length;
-    alert(`Battle Complete! You scored ${correctCount} out of ${battleQuestions.length}!`);
     setIsGameActive(false);
-    setGameMode('menu');
+    setGameMode('report');
   };
 
   const formatTime = (seconds: number) => {
@@ -103,6 +96,19 @@ const Battle = () => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (gameMode === 'report') {
+    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+    return (
+      <BattleReport
+        questions={battleQuestions}
+        selectedAnswers={selectedAnswers}
+        timeTaken={timeTaken}
+        totalQuestions={battleQuestions.length}
+        onBack={() => setGameMode('menu')}
+      />
+    );
+  }
 
   if (gameMode === 'game') {
     const question = battleQuestions[currentQuestion];

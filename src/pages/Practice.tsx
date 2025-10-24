@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,10 @@ import {
   Target,
   Play,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  FileText
 } from 'lucide-react';
-import { subjects, Subject, Topic } from '@/data/questions';
-import { PracticeQuiz } from '@/components/practice/PracticeQuiz';
+import { subjects, Subject, Topic, Question } from '@/data/questions';
 
 const subjectIcons: { [key: string]: any } = {
   "Database Management System": Database,
@@ -83,79 +84,55 @@ const subjectStats = [
 ];
 
 const Practice = () => {
+  const navigate = useNavigate();
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const [currentSet, setCurrentSet] = useState(0);
-  const [view, setView] = useState<'subjects' | 'topics' | 'quiz'>('subjects');
 
   const handleSelectSubject = (subject: Subject) => {
     setSelectedSubject(subject);
-    setView('topics');
   };
 
-  const handleSelectTopic = (topic: Topic) => {
-    setSelectedTopic(topic);
-    setCurrentSet(0);
-    setView('quiz');
+  const handleQuestionClick = (question: Question, questionIndex: number, topicName: string) => {
+    navigate('/question/:id', {
+      state: {
+        question,
+        questionIndex,
+        topicName,
+        subjectName: selectedSubject?.name
+      }
+    });
   };
 
-  const handleBackToTopics = () => {
-    setSelectedTopic(null);
-    setView('topics');
+  const handleTopicAssessment = (topic: Topic) => {
+    const allQuestions = topic.questions.flat();
+    navigate('/assessment', {
+      state: {
+        questions: allQuestions,
+        assessmentName: `${topic.name} Assessment`,
+        subjectName: selectedSubject?.name,
+        type: 'topic'
+      }
+    });
+  };
+
+  const handleSubjectAssessment = () => {
+    if (!selectedSubject) return;
+    const allQuestions = selectedSubject.topics.flatMap(t => t.questions.flat());
+    navigate('/assessment', {
+      state: {
+        questions: allQuestions,
+        assessmentName: `${selectedSubject.name} Assessment`,
+        subjectName: selectedSubject.name,
+        type: 'subject'
+      }
+    });
   };
 
   const handleBackToSubjects = () => {
     setSelectedSubject(null);
-    setSelectedTopic(null);
-    setView('subjects');
   };
-
-  const handleAssessment = () => {
-    alert(`Starting ${selectedTopic?.name || selectedSubject?.name} Assessment!`);
-  };
-
-  const handleSubjectAssessment = () => {
-    alert(`Starting ${selectedSubject?.name} Assessment!`);
-  };
-
-  // Show quiz view
-  if (view === 'quiz' && selectedTopic && selectedSubject) {
-    const questions = selectedTopic.questions[currentSet] || [];
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Set Navigation */}
-        <div className="bg-card border-b sticky top-16 z-10">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2 flex-wrap">
-                {selectedTopic.questions.map((_, index) => (
-                  <Button
-                    key={index}
-                    variant={currentSet === index ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentSet(index)}
-                  >
-                    {index + 1}
-                  </Button>
-                ))}
-              </div>
-              <Badge variant="secondary">Set {currentSet + 1} of {selectedTopic.questions.length}</Badge>
-            </div>
-          </div>
-        </div>
-        <PracticeQuiz
-          questions={questions}
-          topicName={selectedTopic.name}
-          subjectName={selectedSubject.name}
-          onBack={handleBackToTopics}
-          onAssessment={handleAssessment}
-        />
-      </div>
-    );
-  }
 
   // Show topics view
-  if (view === 'topics' && selectedSubject) {
+  if (selectedSubject) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
@@ -176,34 +153,51 @@ const Practice = () => {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {selectedSubject.topics.map((topic) => (
-              <Card 
-                key={topic.id}
-                className="p-6 bg-gradient-card hover:shadow-glow transition-all cursor-pointer group border-border hover:border-primary/50"
-                onClick={() => handleSelectTopic(topic)}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{topic.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {topic.questions.length} question sets available
-                    </p>
+          <div className="space-y-8">
+            {selectedSubject.topics.map((topic) => {
+              const firstSet = topic.questions[0] || [];
+              return (
+                <div key={topic.id} className="space-y-4">
+                  <h3 className="text-xl font-semibold">{topic.name}</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {firstSet.map((question, qIndex) => (
+                      <Card 
+                        key={question.id}
+                        className="p-4 bg-gradient-card hover:shadow-glow transition-all duration-300 border-border hover:border-primary/50 group cursor-pointer"
+                        onClick={() => handleQuestionClick(question, qIndex, topic.name)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1">
+                            <Badge variant="outline">{qIndex + 1}</Badge>
+                            <p className="text-sm truncate">
+                              {question.question.substring(0, 60)}...
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                        </div>
+                      </Card>
+                    ))}
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => handleTopicAssessment(topic)}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Take {topic.name} Assessment
+                  </Button>
                 </div>
-              </Card>
-            ))}
-
+              );
+            })}
+            
             {/* Subject Assessment */}
-            <Card className="p-8 bg-gradient-card text-center mt-8">
-              <h3 className="text-2xl font-bold mb-4">
-                Ready for Complete Assessment?
-              </h3>
+            <Card className="p-8 bg-gradient-card text-center">
+              <h3 className="text-2xl font-bold mb-4">Complete Subject Assessment</h3>
               <p className="text-muted-foreground mb-6">
                 Test your knowledge across all topics in {selectedSubject.name}
               </p>
               <Button size="lg" onClick={handleSubjectAssessment}>
+                <Trophy className="w-5 h-5 mr-2" />
                 Take {selectedSubject.name} Assessment
               </Button>
             </Card>
@@ -254,7 +248,7 @@ const Practice = () => {
           </Card>
           <Card className="p-6 text-center bg-gradient-card">
             <Brain className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold">69</div>
+            <div className="text-2xl font-bold">6</div>
             <div className="text-sm text-muted-foreground">Subjects</div>
           </Card>
         </div>
