@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { 
   Trophy, 
@@ -10,15 +11,16 @@ import {
   Clock, 
   Target,
   Swords,
-  Crown,
   Play,
   UserPlus,
   Hash,
-  Star,
   Medal,
   Timer,
-  Gamepad2
+  Gamepad2,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
+import { battleQuestions, Question } from '@/data/questions';
 
 const battleModes = [
   {
@@ -45,33 +47,161 @@ const battleModes = [
 
 
 const Battle = () => {
-  const [gameMode, setGameMode] = useState<'menu' | 'lobby' | 'game'>('menu');
-  const [selectedMode, setSelectedMode] = useState<number | null>(null);
-  const [roomCode, setRoomCode] = useState('');
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [gameMode, setGameMode] = useState<'menu' | 'game'>('menu');
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
+  const [showResults, setShowResults] = useState<{ [key: number]: boolean }>({});
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [isGameActive, setIsGameActive] = useState(false);
 
-  const handleModeSelect = (modeId: number) => {
-    setSelectedMode(modeId);
-    if (modeId === 1) {
-      // Quick battle - start matchmaking
-      setGameMode('lobby');
-    } else if (modeId === 2) {
-      // Private room - show room options  
-      setIsCreatingRoom(true);
+  useEffect(() => {
+    if (isGameActive && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0 && isGameActive) {
+      handleFinishGame();
     }
+  }, [isGameActive, timeLeft]);
+
+  const handleStartGame = () => {
+    setGameMode('game');
+    setIsGameActive(true);
+    setCurrentQuestion(0);
+    setSelectedAnswers({});
+    setShowResults({});
+    setTimeLeft(600);
   };
 
-  const handleCreateRoom = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setRoomCode(code);
-    setGameMode('lobby');
+  const handleAnswer = (answerIndex: number) => {
+    const questionId = battleQuestions[currentQuestion].id;
+    setSelectedAnswers({ ...selectedAnswers, [questionId]: answerIndex });
+    setShowResults({ ...showResults, [questionId]: true });
+
+    // Auto advance after 1 second
+    setTimeout(() => {
+      if (currentQuestion < battleQuestions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        handleFinishGame();
+      }
+    }, 1000);
   };
 
-  const handleJoinRoom = () => {
-    if (roomCode.length >= 4) {
-      setGameMode('lobby');
-    }
+  const handleFinishGame = () => {
+    const correctCount = Object.keys(showResults).filter(
+      (qId) => selectedAnswers[parseInt(qId)] === battleQuestions.find(q => q.id === parseInt(qId))?.correctAnswer
+    ).length;
+    alert(`Battle Complete! You scored ${correctCount} out of ${battleQuestions.length}!`);
+    setIsGameActive(false);
+    setGameMode('menu');
   };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (gameMode === 'game') {
+    const question = battleQuestions[currentQuestion];
+    const questionId = question.id;
+    const isAnswered = showResults[questionId];
+    const selectedAnswer = selectedAnswers[questionId];
+    const isCorrect = selectedAnswer === question.correctAnswer;
+
+    return (
+      <div className="min-h-screen bg-background pt-20 pb-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Battle Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <Badge variant="secondary" className="mb-2">
+                <Swords className="w-4 h-4 mr-2" />
+                Quiz Battle
+              </Badge>
+              <h2 className="text-2xl font-bold">Question {currentQuestion + 1} of {battleQuestions.length}</h2>
+            </div>
+            <Card className="p-4 bg-gradient-card">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                <span className="text-2xl font-bold">{formatTime(timeLeft)}</span>
+              </div>
+            </Card>
+          </div>
+
+          {/* Progress */}
+          <Progress value={((currentQuestion + 1) / battleQuestions.length) * 100} className="h-2 mb-8" />
+
+          {/* Question Card */}
+          <Card className="p-8 bg-gradient-card mb-6">
+            <div className="flex items-start gap-4 mb-6">
+              <Badge variant="outline" className="text-lg px-3 py-1">
+                {currentQuestion + 1}
+              </Badge>
+              <h2 className="text-2xl font-semibold flex-1">{question.question}</h2>
+              {isAnswered && (
+                isCorrect ? (
+                  <CheckCircle2 className="w-8 h-8 text-green-500" />
+                ) : (
+                  <XCircle className="w-8 h-8 text-red-500" />
+                )
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {question.options.map((option, optionIndex) => {
+                const isSelected = selectedAnswer === optionIndex;
+                const isCorrectOption = optionIndex === question.correctAnswer;
+                
+                let buttonClass = "justify-start text-left h-auto py-4 px-4 ";
+                if (isAnswered) {
+                  if (isCorrectOption) {
+                    buttonClass += "border-green-500 bg-green-500/10";
+                  } else if (isSelected && !isCorrect) {
+                    buttonClass += "border-red-500 bg-red-500/10";
+                  }
+                } else if (isSelected) {
+                  buttonClass += "border-primary bg-primary/10";
+                }
+
+                return (
+                  <Button
+                    key={optionIndex}
+                    variant="outline"
+                    className={buttonClass}
+                    onClick={() => !isAnswered && handleAnswer(optionIndex)}
+                    disabled={isAnswered}
+                  >
+                    <span className="font-semibold mr-3 text-lg">{String.fromCharCode(65 + optionIndex)}.</span>
+                    <span className="text-base">{option}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Score Display */}
+          <Card className="p-6 bg-gradient-card">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-sm text-muted-foreground">Your Score</div>
+                <div className="text-2xl font-bold">
+                  {Object.keys(showResults).filter(
+                    (qId) => selectedAnswers[parseInt(qId)] === battleQuestions.find(q => q.id === parseInt(qId))?.correctAnswer
+                  ).length} / {Object.keys(showResults).length}
+                </div>
+              </div>
+              <Button onClick={handleFinishGame} variant="outline">
+                End Battle
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-16">
@@ -120,8 +250,7 @@ const Battle = () => {
               {battleModes.map((mode) => (
                 <Card 
                   key={mode.id} 
-                  className="p-6 bg-gradient-card hover:shadow-glow transition-all duration-300 border-border hover:border-primary/50 group cursor-pointer"
-                  onClick={() => handleModeSelect(mode.id)}
+                  className="p-6 bg-gradient-card hover:shadow-glow transition-all duration-300 border-border hover:border-primary/50 group"
                 >
                   <div className="text-center">
                     <div className={`w-16 h-16 ${mode.color} rounded-full flex items-center justify-center mx-auto mb-4 shadow-md`}>
@@ -146,7 +275,10 @@ const Battle = () => {
                       </div>
                     </div>
                     
-                    <Button className="w-full group-hover:bg-primary/90">
+                    <Button 
+                      onClick={handleStartGame}
+                      className="w-full group-hover:bg-primary/90"
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Start Battle
                     </Button>
@@ -155,105 +287,7 @@ const Battle = () => {
               ))}
             </div>
 
-            {/* Private Room Options */}
-            {isCreatingRoom && (
-              <Card className="p-8 bg-gradient-card max-w-md mx-auto mb-12">
-                <h3 className="text-xl font-semibold mb-6 text-center">Private Room</h3>
-                <div className="space-y-4">
-                  <Button 
-                    onClick={handleCreateRoom}
-                    className="w-full justify-start"
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Create New Room
-                  </Button>
-                  <div className="text-center text-muted-foreground">or</div>
-                  <div className="space-y-2">
-                    <Input 
-                      placeholder="Enter room code"
-                      value={roomCode}
-                      onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                      className="text-center text-lg font-mono"
-                    />
-                    <Button 
-                      onClick={handleJoinRoom}
-                      variant="outline" 
-                      className="w-full"
-                      disabled={roomCode.length < 4}
-                    >
-                      <Hash className="w-4 h-4 mr-2" />
-                      Join Room
-                    </Button>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => setIsCreatingRoom(false)}
-                    className="w-full"
-                  >
-                    Back
-                  </Button>
-                </div>
-              </Card>
-            )}
           </>
-        )}
-
-        {gameMode === 'lobby' && (
-          <div className="max-w-2xl mx-auto text-center">
-            <Card className="p-12 bg-gradient-card">
-              <div className="mb-8">
-                <Gamepad2 className="w-16 h-16 text-primary mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-2">
-                  {roomCode ? `Room: ${roomCode}` : 'Finding Opponents...'}
-                </h2>
-                <p className="text-muted-foreground">
-                  {roomCode ? 'Share the room code with your friends!' : 'Please wait while we match you with other players'}
-                </p>
-              </div>
-
-              {/* Waiting players */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[1, 2, 3, 4].map((slot) => (
-                  <div key={slot} className="p-4 border border-border rounded-lg">
-                    {slot <= 2 ? (
-                      <div>
-                        <div className="w-12 h-12 bg-primary rounded-full mx-auto mb-2 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="text-sm font-medium">Player {slot}</div>
-                        <Badge variant="secondary" className="mt-1">Ready</Badge>
-                      </div>
-                    ) : (
-                      <div className="opacity-50">
-                        <div className="w-12 h-12 bg-muted rounded-full mx-auto mb-2 flex items-center justify-center">
-                          <Users className="w-6 h-6" />
-                        </div>
-                        <div className="text-sm">Waiting...</div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setGameMode('menu')}
-                  className="flex-1"
-                >
-                  Leave Lobby
-                </Button>
-                <Button 
-                  variant="hero" 
-                  className="flex-1"
-                  onClick={() => console.log('Starting game...')}
-                >
-                  <Timer className="w-4 h-4 mr-2" />
-                  Start Game
-                </Button>
-              </div>
-            </Card>
-          </div>
         )}
       </div>
     </div>
