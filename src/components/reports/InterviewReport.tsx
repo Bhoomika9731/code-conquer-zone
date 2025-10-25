@@ -129,12 +129,9 @@ export const InterviewReport = ({ results, totalTime, onBack }: InterviewReportP
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mt-8">
-          <Button variant="outline" className="flex-1" onClick={onBack}>
+        <div className="flex justify-center mt-8">
+          <Button onClick={onBack}>
             Back to Menu
-          </Button>
-          <Button className="flex-1">
-            Share Results
           </Button>
         </div>
       </div>

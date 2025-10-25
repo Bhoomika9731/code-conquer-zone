@@ -101,12 +101,15 @@ const Practice = () => {
   };
 
   const handleQuestionClick = (question: Question, questionIndex: number) => {
+    const currentQuestions = selectedTopic?.questions[selectedSet] || [];
     navigate('/question-detail', {
       state: {
         question,
         questionIndex,
         topicName: selectedTopic?.name,
-        subjectName: selectedSubject?.name
+        subjectName: selectedSubject?.name,
+        questions: currentQuestions,
+        setNumber: selectedSet + 1
       }
     });
   };

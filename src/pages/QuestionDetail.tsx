@@ -3,17 +3,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, CheckCircle2, XCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
 import { Question } from '@/data/questions';
 
 const QuestionDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { question, questionIndex, topicName, subjectName } = location.state as {
+  const { question, questionIndex, topicName, subjectName, questions, setNumber } = location.state as {
     question: Question;
     questionIndex: number;
     topicName: string;
     subjectName: string;
+    questions: Question[];
+    setNumber: number;
   };
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -22,6 +24,40 @@ const QuestionDetail = () => {
   const handleAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
     setShowResult(true);
+  };
+
+  const handleNextQuestion = () => {
+    if (questionIndex < questions.length - 1) {
+      navigate('/question-detail', {
+        state: {
+          question: questions[questionIndex + 1],
+          questionIndex: questionIndex + 1,
+          topicName,
+          subjectName,
+          questions,
+          setNumber
+        }
+      });
+      setSelectedAnswer(null);
+      setShowResult(false);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (questionIndex > 0) {
+      navigate('/question-detail', {
+        state: {
+          question: questions[questionIndex - 1],
+          questionIndex: questionIndex - 1,
+          topicName,
+          subjectName,
+          questions,
+          setNumber
+        }
+      });
+      setSelectedAnswer(null);
+      setShowResult(false);
+    }
   };
 
   const isCorrect = selectedAnswer === question.correctAnswer;
@@ -95,9 +131,24 @@ const QuestionDetail = () => {
           )}
 
           {showResult && (
-            <div className="mt-6 text-center">
-              <Button onClick={() => navigate(-1)} size="lg">
-                Continue Learning
+            <div className="mt-6 flex gap-4 justify-center">
+              <Button 
+                onClick={handlePreviousQuestion} 
+                disabled={questionIndex === 0}
+                variant="outline"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+              <Button onClick={() => navigate(-1)} variant="outline">
+                Back to Questions
+              </Button>
+              <Button 
+                onClick={handleNextQuestion}
+                disabled={questionIndex === questions.length - 1}
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           )}
