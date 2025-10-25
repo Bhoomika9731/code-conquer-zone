@@ -12,7 +12,8 @@ import {
   Swords,
   Play,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Medal
 } from 'lucide-react';
 import { battleQuestions, Question } from '@/data/questions';
 import { BattleReport } from '@/components/reports/BattleReport';
