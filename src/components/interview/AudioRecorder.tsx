@@ -170,30 +170,32 @@ export const AudioRecorder = ({ onRecordingComplete, question }: AudioRecorderPr
 
   return (
     <div className="space-y-6">
-      {/* Video Preview */}
-      {videoEnabled && (
-        <Card className="relative overflow-hidden bg-black">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full aspect-video object-cover"
-          />
-          {isRecording && (
-            <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <span className="text-sm font-medium">REC {formatTime(recordingTime)}</span>
-            </div>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Question on Left */}
+        <Card className="p-6 bg-gradient-card">
+          <h3 className="text-xl font-semibold mb-4">Interview Question:</h3>
+          <p className="text-lg">{question}</p>
         </Card>
-      )}
 
-      {/* Question Display */}
-      <Card className="p-6 bg-gradient-card">
-        <h3 className="text-xl font-semibold mb-2">Interview Question:</h3>
-        <p className="text-lg">{question}</p>
-      </Card>
+        {/* Video Preview on Right */}
+        {videoEnabled && (
+          <Card className="relative overflow-hidden bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="w-full aspect-video object-cover"
+            />
+            {isRecording && (
+              <div className="absolute top-4 right-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <span className="text-sm font-medium">REC {formatTime(recordingTime)}</span>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
 
       {/* Controls */}
       <div className="flex flex-col gap-4">
@@ -216,7 +218,7 @@ export const AudioRecorder = ({ onRecordingComplete, question }: AudioRecorderPr
               className="gap-2"
             >
               <Square className="w-5 h-5" />
-              Stop Recording
+              Submit Recording
             </Button>
           )}
 
@@ -249,6 +251,12 @@ export const AudioRecorder = ({ onRecordingComplete, question }: AudioRecorderPr
         {!hasPermissions && (
           <p className="text-center text-sm text-muted-foreground">
             Please grant camera and microphone permissions to continue
+          </p>
+        )}
+
+        {isRecording && (
+          <p className="text-center text-sm text-yellow-500">
+            Note: You can only record once. Click "Submit Recording" when done.
           </p>
         )}
       </div>

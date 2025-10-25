@@ -86,17 +86,26 @@ const subjectStats = [
 const Practice = () => {
   const navigate = useNavigate();
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedSet, setSelectedSet] = useState(0);
 
   const handleSelectSubject = (subject: Subject) => {
     setSelectedSubject(subject);
+    setSelectedTopic(null);
+    setSelectedSet(0);
   };
 
-  const handleQuestionClick = (question: Question, questionIndex: number, topicName: string) => {
-    navigate('/question/:id', {
+  const handleSelectTopic = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setSelectedSet(0);
+  };
+
+  const handleQuestionClick = (question: Question, questionIndex: number) => {
+    navigate('/question-detail', {
       state: {
         question,
         questionIndex,
-        topicName,
+        topicName: selectedTopic?.name,
         subjectName: selectedSubject?.name
       }
     });
@@ -129,18 +138,95 @@ const Practice = () => {
 
   const handleBackToSubjects = () => {
     setSelectedSubject(null);
+    setSelectedTopic(null);
+    setSelectedSet(0);
   };
+
+  const handleBackToTopics = () => {
+    setSelectedTopic(null);
+    setSelectedSet(0);
+  };
+
+  // Show question list for selected topic
+  if (selectedTopic && selectedSubject) {
+    const currentQuestions = selectedTopic.questions[selectedSet] || [];
+    
+    return (
+      <div className="min-h-screen bg-background pt-20 pb-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <Button variant="outline" onClick={handleBackToTopics} className="mb-6">
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Topics
+          </Button>
+
+          {/* Header */}
+          <div className="mb-8">
+            <Badge variant="secondary" className="mb-2">{selectedSubject.name}</Badge>
+            <h1 className="text-3xl font-bold mb-4">{selectedTopic.name}</h1>
+            
+            {/* Set Selector */}
+            <div className="flex gap-2 flex-wrap">
+              {selectedTopic.questions.map((_, index) => (
+                <Button
+                  key={index}
+                  variant={selectedSet === index ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedSet(index)}
+                >
+                  Set {index + 1}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Questions List */}
+          <div className="space-y-3 mb-6">
+            {currentQuestions.map((question, index) => (
+              <Card
+                key={question.id}
+                className="p-4 bg-gradient-card hover:shadow-glow transition-all cursor-pointer"
+                onClick={() => handleQuestionClick(question, index)}
+              >
+                <div className="flex items-start gap-4">
+                  <Badge variant="outline" className="mt-1">
+                    {index + 1}
+                  </Badge>
+                  <div className="flex-1">
+                    <p className="font-medium line-clamp-2">{question.question}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Topic Assessment Button */}
+          <Card className="p-6 bg-gradient-card text-center">
+            <h3 className="text-xl font-bold mb-2">Ready to Test Your Knowledge?</h3>
+            <p className="text-muted-foreground mb-4">
+              Take the complete {selectedTopic.name} assessment
+            </p>
+            <Button onClick={() => handleTopicAssessment(selectedTopic)} size="lg">
+              <Target className="w-5 h-5 mr-2" />
+              Take {selectedTopic.name} Assessment
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Show topics view
   if (selectedSubject) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-6xl">
           <Button variant="outline" onClick={handleBackToSubjects} className="mb-6">
             <ChevronLeft className="w-4 h-4 mr-2" />
             Back to Subjects
           </Button>
 
+          {/* Subject Header */}
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
               {selectedSubject.name}
@@ -149,59 +235,55 @@ const Practice = () => {
               Choose a <span className="bg-gradient-primary bg-clip-text text-transparent">Topic</span>
             </h1>
             <p className="text-muted-foreground">
-              Select a topic to start practicing with MCQs
+              Select a topic to start practicing
             </p>
           </div>
 
-          <div className="space-y-8">
-            {selectedSubject.topics.map((topic) => {
-              const firstSet = topic.questions[0] || [];
+          {/* Topics List */}
+          <div className="space-y-3 mb-8">
+            {selectedSubject.topics.map((topic, index) => {
+              const totalQuestions = topic.questions.flat().length;
+              const totalSets = topic.questions.length;
+              
               return (
-                <div key={topic.id} className="space-y-4">
-                  <h3 className="text-xl font-semibold">{topic.name}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {firstSet.map((question, qIndex) => (
-                      <Card 
-                        key={question.id}
-                        className="p-4 bg-gradient-card hover:shadow-glow transition-all duration-300 border-border hover:border-primary/50 group cursor-pointer"
-                        onClick={() => handleQuestionClick(question, qIndex, topic.name)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            <Badge variant="outline">{qIndex + 1}</Badge>
-                            <p className="text-sm truncate">
-                              {question.question.substring(0, 60)}...
-                            </p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
-                        </div>
-                      </Card>
-                    ))}
+                <Card 
+                  key={topic.id}
+                  className="p-6 bg-gradient-card hover:shadow-glow transition-all duration-300 border-border hover:border-primary/50 group cursor-pointer"
+                  onClick={() => handleSelectTopic(topic)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Badge variant="outline" className="text-lg px-3 py-1">
+                        {index + 1}
+                      </Badge>
+                      <div>
+                        <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
+                          {topic.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {totalQuestions} questions • {totalSets} sets
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-6 h-6 text-primary group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => handleTopicAssessment(topic)}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Take {topic.name} Assessment
-                  </Button>
-                </div>
+                </Card>
               );
             })}
-            
-            {/* Subject Assessment */}
-            <Card className="p-8 bg-gradient-card text-center">
-              <h3 className="text-2xl font-bold mb-4">Complete Subject Assessment</h3>
-              <p className="text-muted-foreground mb-6">
-                Test your knowledge across all topics in {selectedSubject.name}
-              </p>
-              <Button size="lg" onClick={handleSubjectAssessment}>
-                <Trophy className="w-5 h-5 mr-2" />
-                Take {selectedSubject.name} Assessment
-              </Button>
-            </Card>
           </div>
+
+          {/* Subject Assessment */}
+          <Card className="p-8 bg-gradient-card text-center">
+            <Trophy className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Complete {selectedSubject.name} Assessment</h2>
+            <p className="text-muted-foreground mb-6">
+              Test your knowledge across all topics in {selectedSubject.name}
+            </p>
+            <Button onClick={handleSubjectAssessment} size="lg">
+              <Target className="w-5 h-5 mr-2" />
+              Take {selectedSubject.name} Assessment
+            </Button>
+          </Card>
         </div>
       </div>
     );

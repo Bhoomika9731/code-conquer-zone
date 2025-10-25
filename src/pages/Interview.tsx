@@ -8,38 +8,37 @@ import {
   Video, 
   Mic, 
   Clock, 
-  Target,
   User,
   Play,
   Settings,
   ChevronRight,
   Star,
-  Award,
-  CheckCircle2,
-  XCircle
+  Award
 } from 'lucide-react';
-import { interviewQuestions, Question } from '@/data/questions';
+import { subjectiveInterviewQuestions, SubjectiveQuestion } from '@/data/subjectiveQuestions';
+import { AudioRecorder } from '@/components/interview/AudioRecorder';
+import { InterviewReport } from '@/components/reports/InterviewReport';
 
 const interviewTypes = [
   {
     id: 1,
     title: 'Technical Interview',
     description: 'Data structures, algorithms, and coding challenges',
-    duration: '45-60 minutes',
+    duration: '15-20 minutes',
     difficulty: 'Intermediate',
     icon: Brain,
     color: 'bg-blue-500',
-    questions: 25,
+    questions: 3,
   },
   {
     id: 2,
     title: 'Behavioral Interview',
     description: 'Soft skills, teamwork, and problem-solving scenarios',
-    duration: '30-45 minutes',
+    duration: '15-20 minutes',
     difficulty: 'All Levels',
     icon: User,
     color: 'bg-green-500',
-    questions: 20,
+    questions: 3,
   },
 ];
 
@@ -50,14 +49,24 @@ const experienceLevels = [
   { label: 'Senior Engineer', value: 'senior', years: '5+ years' },
 ];
 
+interface QuestionResult {
+  question: string;
+  userResponse: string;
+  betterResponse: string;
+  marks: number;
+  maxMarks: number;
+}
+
 const Interview = () => {
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>('junior');
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [isInterviewActive, setIsInterviewActive] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
-  const [showResults, setShowResults] = useState<{ [key: number]: boolean }>({});
+  const [recordings, setRecordings] = useState<{ [key: number]: { audio: Blob; video: Blob | null } }>({});
+  const [showReport, setShowReport] = useState(false);
+  const [totalTime, setTotalTime] = useState(0);
+  const [startTime, setStartTime] = useState<number>(0);
 
   const handleStartInterview = (typeId: number) => {
     setSelectedType(typeId);
@@ -67,132 +76,77 @@ const Interview = () => {
   const handleBeginInterview = () => {
     setIsInterviewActive(true);
     setCurrentQuestion(0);
-    setSelectedAnswers({});
-    setShowResults({});
+    setRecordings({});
+    setStartTime(Date.now());
   };
 
-  const handleAnswer = (answerIndex: number) => {
-    const questionId = interviewQuestions[currentQuestion].id;
-    setSelectedAnswers({ ...selectedAnswers, [questionId]: answerIndex });
-    setShowResults({ ...showResults, [questionId]: true });
-  };
-
-  const handleNext = () => {
-    if (currentQuestion < interviewQuestions.length - 1) {
+  const handleRecordingComplete = (audioBlob: Blob, videoBlob: Blob | null) => {
+    const questionId = subjectiveInterviewQuestions[currentQuestion].id;
+    setRecordings({ ...recordings, [questionId]: { audio: audioBlob, video: videoBlob } });
+    
+    // Move to next question or finish
+    if (currentQuestion < 2) { // Only 3 questions (0, 1, 2)
       setCurrentQuestion(currentQuestion + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+    } else {
+      handleFinish();
     }
   };
 
   const handleFinish = () => {
-    const correctCount = Object.keys(showResults).filter(
-      (qId) => selectedAnswers[parseInt(qId)] === interviewQuestions.find(q => q.id === parseInt(qId))?.correctAnswer
-    ).length;
-    alert(`Interview Complete! You got ${correctCount} out of ${interviewQuestions.length} correct.`);
+    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+    setTotalTime(timeTaken);
     setIsInterviewActive(false);
-    setIsSetupMode(false);
+    setShowReport(true);
   };
 
+  const handleBackToMenu = () => {
+    setShowReport(false);
+    setIsSetupMode(false);
+    setCurrentQuestion(0);
+    setRecordings({});
+  };
+
+  // Generate mock results for report
+  const generateResults = (): QuestionResult[] => {
+    return subjectiveInterviewQuestions.slice(0, 3).map((q, idx) => ({
+      question: q.question,
+      userResponse: "This is a simulated user response based on the recording. In a real implementation, this would be transcribed from the audio.",
+      betterResponse: q.sampleAnswer,
+      marks: Math.floor(Math.random() * 3) + 7, // Random marks between 7-10
+      maxMarks: 10
+    }));
+  };
+
+  if (showReport) {
+    return (
+      <InterviewReport
+        results={generateResults()}
+        totalTime={totalTime}
+        onBack={handleBackToMenu}
+      />
+    );
+  }
+
   if (isInterviewActive) {
-    const question = interviewQuestions[currentQuestion];
-    const questionId = question.id;
-    const isAnswered = showResults[questionId];
-    const selectedAnswer = selectedAnswers[questionId];
-    const isCorrect = selectedAnswer === question.correctAnswer;
+    const question = subjectiveInterviewQuestions[currentQuestion];
 
     return (
       <div className="min-h-screen bg-background pt-20 pb-16">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-7xl">
           {/* Progress */}
           <div className="mb-8">
             <div className="flex justify-between text-sm mb-2">
-              <span>Question {currentQuestion + 1} of {interviewQuestions.length}</span>
-              <span>{Math.round(((currentQuestion + 1) / interviewQuestions.length) * 100)}% Complete</span>
+              <span>Question {currentQuestion + 1} of 3</span>
+              <span>{Math.round(((currentQuestion + 1) / 3) * 100)}% Complete</span>
             </div>
-            <Progress value={((currentQuestion + 1) / interviewQuestions.length) * 100} className="h-2" />
+            <Progress value={((currentQuestion + 1) / 3) * 100} className="h-2" />
           </div>
 
-          {/* Question Card */}
-          <Card className="p-8 bg-gradient-card mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <Badge variant="outline" className="text-lg px-3 py-1">
-                {currentQuestion + 1}
-              </Badge>
-              <h2 className="text-2xl font-semibold flex-1">{question.question}</h2>
-              {isAnswered && (
-                isCorrect ? (
-                  <CheckCircle2 className="w-8 h-8 text-green-500" />
-                ) : (
-                  <XCircle className="w-8 h-8 text-red-500" />
-                )
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {question.options.map((option, optionIndex) => {
-                const isSelected = selectedAnswer === optionIndex;
-                const isCorrectOption = optionIndex === question.correctAnswer;
-                
-                let buttonClass = "justify-start text-left h-auto py-4 px-4 ";
-                if (isAnswered) {
-                  if (isCorrectOption) {
-                    buttonClass += "border-green-500 bg-green-500/10";
-                  } else if (isSelected && !isCorrect) {
-                    buttonClass += "border-red-500 bg-red-500/10";
-                  }
-                } else if (isSelected) {
-                  buttonClass += "border-primary bg-primary/10";
-                }
-
-                return (
-                  <Button
-                    key={optionIndex}
-                    variant="outline"
-                    className={buttonClass}
-                    onClick={() => !isAnswered && handleAnswer(optionIndex)}
-                    disabled={isAnswered}
-                  >
-                    <span className="font-semibold mr-3 text-lg">{String.fromCharCode(65 + optionIndex)}.</span>
-                    <span className="text-base">{option}</span>
-                  </Button>
-                );
-              })}
-            </div>
-
-            {isAnswered && question.explanation && (
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm">
-                  <strong>Explanation:</strong> {question.explanation}
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* Navigation */}
-          <div className="flex justify-between">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentQuestion === 0}
-            >
-              Previous
-            </Button>
-            {currentQuestion === interviewQuestions.length - 1 ? (
-              <Button onClick={handleFinish}>
-                Finish Interview
-              </Button>
-            ) : (
-              <Button onClick={handleNext}>
-                Next Question
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-          </div>
+          {/* Interview Interface */}
+          <AudioRecorder 
+            question={question.question}
+            onRecordingComplete={handleRecordingComplete}
+          />
         </div>
       </div>
     );
